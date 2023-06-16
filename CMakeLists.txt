@@ -59,6 +59,7 @@ add_subdirectory(fpga-network-stack)
 #User kernel IPs
 add_subdirectory(kernel/user_krnl/scatter_krnl/src/hls)
 add_subdirectory(kernel/user_krnl/iperf_krnl/src/hls)
+add_subdirectory(kernel/user_krnl/http_server_krnl/src/hls)
 
 #
 # Find Vivado

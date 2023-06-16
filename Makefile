@@ -78,6 +78,10 @@ CXXFLAGS += $(opencl_CXXFLAGS) -Wall -O0 -g -std=gnu++14
 CXXFLAGS +=  -DVITIS_PLATFORM=$(VITIS_PLATFORM)
 LDFLAGS += $(opencl_LDFLAGS)
 
+ifeq ($(USER_KRNL), http_server_krnl)
+  LDFLAGS += -L$(XILINX_XRT)/lib -lxrt_coreutil
+endif
+
 HOST_SRCS += host/${USER_KRNL}/host.cpp #host/${USER_KRNL}/*/*.cpp
 # Host compiler global settings
 CXXFLAGS += -fmessage-length=0
@@ -103,6 +107,7 @@ CLFLAGS += --advanced.param compiler.userPostSysLinkTcl=$(POSTSYSLINKTCL) #--xp 
 CLFLAGS += --dk chipscope:network_krnl_1:m_axis_tcp_open_status --dk chipscope:network_krnl_1:s_axis_tcp_tx_meta --dk chipscope:network_krnl_1:m_axis_tcp_tx_status  --dk chipscope:network_krnl_1:s_axis_tcp_open_connection #--dk chipscope:${USER_KRNL}_1:s_axi_control # --dk chipscope:network_krnl_1:axis_net_tx 
 
 CLFLAGS += --dk chipscope:network_krnl_1:m_axis_tcp_port_status --dk chipscope:network_krnl_1:m_axis_tcp_notification --dk chipscope:network_krnl_1:m_axis_tcp_rx_meta  --dk chipscope:network_krnl_1:s_axis_tcp_read_pkg  --dk chipscope:network_krnl_1:s_axis_tcp_listen_port #--dk chipscope:network_krnl_1:axis_net_rx
+CLFLAGS += --dk chipscope:network_krnl_1:m_axis_tcp_rx_data --dk chipscope:network_krnl_1:s_axis_tcp_tx_data
 
 CLFLAGS += --config ./kernel/user_krnl/${USER_KRNL}/config_sp_${USER_KRNL}.txt --config ./scripts/network_krnl_mem.txt --config ./scripts/cmac_krnl_slr.txt
 

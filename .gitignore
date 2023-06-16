@@ -1,0 +1,15 @@
+build*/
+.ipcache/
+_x.*/
+packaged_kernel*/
+tmp_kernel_pack*/
+*.log
+*.jou
+*.ltx
+*.xclbin
+http_server_data/
+kernel/common/types/network_types.svh
+scripts/cmac_krnl_slr.txt
+scripts/network_krnl_mem.txt
+scripts/post_sys_link.tcl
+host/host
