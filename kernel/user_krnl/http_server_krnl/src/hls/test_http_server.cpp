@@ -41,7 +41,7 @@ int main() {
     100,
     200,
     30000,
-    1000
+    2000
   };
   uint64_t fileOffset[FILE_NUM] = {
     0,
@@ -205,6 +205,7 @@ int main() {
   }
 
   // send response
+  int send_bytes = 0;
   for (int i = 0; i < 100; i++) {
     http_server(listenPort,
                 listenPortStatus,
@@ -234,25 +235,25 @@ int main() {
         }
         header = false;
       } else {
-        if (!(txMeta.sessionID == 1 && txMeta.length == 1000)) {
+        if (!(txMeta.sessionID == 1 && (txMeta.length == 1408 || txMeta.length == 592))) {
           std::cout << "wrong appTxMeta" << std::endl;
           return 1;
         }
-      }
-      if (!(txMeta.sessionID == 1 && (txMeta.length == 64 || txMeta.length == 1000))) {
-        std::cout << "wrong appTxMeta" << std::endl;
-        return 1;
       }
       txStatus.write(appTxRsp(txMeta.sessionID, txMeta.length, 0xffff, 0));
     }
 
     if (!txData.empty()) {
-      static bool header = true;
       ap_axiu<DATA_WIDTH, 0, 0, 0> txWord = txData.read();
       std::cout << "count=" << count << " txData data=" << std::hex << txWord.data << " keep=" << txWord.keep << " last=" << std::dec << txWord.last << std::endl;
+      for (int i = 0; i < DATA_WIDTH / 8; i++) {
+        if (txWord.keep[i] == 1) {
+          send_bytes++;
+        }
+      }
     }
 
-    if (!closeConnection.empty()) {
+    if (!closeConnection.empty() && send_bytes == 2064) {
       ap_uint<16> closeID = closeConnection.read();
       std::cout << "count=" << count << " closeConnection id=" << closeID << std::endl;
       if (closeID != 1) {
@@ -262,6 +263,10 @@ int main() {
         break;
       }
     }
+  }
+  if (send_bytes != 2064) {
+    std::cout << "wrong txData send_bytes=" << send_bytes << std::endl;
+    return 1;
   }
 
   std::cout << "Finished count=" << std::dec << count << std::endl;

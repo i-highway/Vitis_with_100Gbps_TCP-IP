@@ -115,7 +115,7 @@ void server(hls::stream<ap_uint<16>>&listenPort,
 
     static char header[256];
     static int headerPos = 0;
-    static char path[64];
+    static char path[64] = {};
 #pragma HLS array_partition variable=path type=complete
     static int pathStartPos = 0;
     static int pathPos = 0;
@@ -218,7 +218,6 @@ void server(hls::stream<ap_uint<16>>&listenPort,
         break;
       }
       case SEARCH_FILE: {
-        //if (strcmp(path, filePath[fileEntryIdx]) == 0) {
         if (path_cmp(path, filePath[fileEntryIdx])) {
           txMetaDataBuffer.write(appTxMeta(sessionID, WIDTH / 8));
           remainBytes = fileSize[fileEntryIdx];
@@ -268,7 +267,6 @@ void server(hls::stream<ap_uint<16>>&listenPort,
         break;
       }
       case RESP_BODY_CMD: {
-        std::cout << "serverState=RESP_BODY" << std::endl;
         if (!txStatus.empty()) {
           internalAppTxRsp resp = txStatus.read();
           if (resp.error == 0) {
@@ -285,21 +283,33 @@ void server(hls::stream<ap_uint<16>>&listenPort,
       }
       case RESP_BODY_DATA: {
         if (curTxBytes > 0) {
-          net_axis<WIDTH> bodyWord;
-          int bytes = curTxBytes > (WIDTH / 8) ? (WIDTH / 8) : curTxBytes;
-          std::cout << "dataWordOffset=" << std::hex << dataWordOffset << std::dec << std::endl;
-          bodyWord.data = fileData[dataWordOffset];
-          dataWordOffset++;
-          for (int i = 0; i < WIDTH / 8; i++) {
-            if (i < bytes) {
-              bodyWord.keep[i] = 1;
+          int words = (curTxBytes + WIDTH / 8 - 1) / (WIDTH / 8);
+          std::cout << "words=" << words << std::endl;
+          for (int i = 0; i < words; i++) {
+            net_axis<WIDTH> bodyWord;
+            bodyWord.data = fileData[dataWordOffset + i];
+            if (i == words - 1) {
+              // last word
+              int mod = curTxBytes & (WIDTH / 8 - 1);
+              int last_bytes = mod == 0 ? WIDTH / 8 : mod;
+              for (int j = 0; j < WIDTH / 8; j++) {
+                if (j < last_bytes) {
+                  bodyWord.keep[j] = 1;
+                } else {
+                  bodyWord.keep[j] = 0;
+                }
+              }
+              bodyWord.last = 1;
             } else {
-              bodyWord.keep[i] = 0;
+              for (int j = 0; j < WIDTH / 8; j++) {
+                bodyWord.keep[j] = 1;
+              }
+              bodyWord.last = 0;
             }
+            txDataBuffer.write(bodyWord);
           }
-          bodyWord.last = curTxBytes <= (WIDTH / 8);
-          txDataBuffer.write(bodyWord);
-          curTxBytes -= bytes;
+          curTxBytes = 0;
+          dataWordOffset += words;
         } else if (remainBytes > 0) {
           curTxBytes = remainBytes > (WIDTH / 8 * 22) ? (WIDTH / 8 * 22) : remainBytes;
           txMetaDataBuffer.write(appTxMeta(sessionID, curTxBytes));
@@ -393,8 +403,8 @@ void http_server(hls::stream<ap_uint<16>>& listenPort,
 
 #pragma HLS INTERFACE ap_none register port=startServer
 
-#pragma HLS INTERFACE mode=m_axi port=fileList offset=direct bundle=gmem depth=0x80000
-#pragma HLS INTERFACE mode=m_axi port=fileData offset=direct bundle=gmem depth=0x80000
+#pragma HLS INTERFACE mode=m_axi port=fileList max_read_burst_length=64 offset=direct bundle=gmem depth=0x80000
+#pragma HLS INTERFACE mode=m_axi port=fileData max_read_burst_length=64 offset=direct bundle=gmem depth=0x80000
 #pragma HLS INTERFACE ap_none register port=fileNum
 
 #pragma HLS INTERFACE ap_none register port=serverPort
