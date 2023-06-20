@@ -86,6 +86,7 @@ Kernel options:
 | scatter\_krnl         | rtl                        |  Scatter kernel contains some HLS IPs and a rtl wrapper. It scatters packets through serveral connections. Usage: ./host XCLBIN_FILE  [IP address in format 10.1.212.121] [Base Port] [#Connection] [#Tx Pkg]. Kernel tries to open connections with different port numbers with incremental offset by the Base Port.                                                                      |
 | hls\_send\_krnl        | hls                        | This kernel is a C kernel working in the VITIS HLS flow. It contains simple examples in C to open connection, send data through the connection. Usage: ./host XCLBIN_FILE  [#Tx Pkt] [IP address in format: 10.1.212.121] [Port]                                  |
 | hls\_recv\_krnl      |  hls               | This kernel is a C kernel working in the VITIS HLS flow. It contains simple examples in C to listen on port and receive data from connection established with that port. Usage: ./host XCLBIN_FILE  [#RxByte] [Port]                     |
+| http\_server\_krnl   | rtl                        | Http server kernel contains some HLS IPs and a rtl wrapper. It returns a file as an HTTP response to an HTTP request. Usage: ./host XCLBIN_FILE  [Server IP address in format 10.1.212.121] [Server port] [Data directory]
 
 ## Repository structure
 
@@ -100,11 +101,13 @@ Kernel options:
 |		└── scatter_krnl
 |		└── hls_send_krnl
 |		└── hls_recv_krnl
+|		└── http_server_krnl
 ├── host
 |	└── iperf_krnl
 |	└── scatter_krnl
 |	└── hls_send_krnl
 |	└── hls_recv_krnl
+|	└── http_server_krnl
 ├── common
 ├── img
 ~~~
