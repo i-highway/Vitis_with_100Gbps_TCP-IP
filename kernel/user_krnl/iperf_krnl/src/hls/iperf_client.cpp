@@ -410,19 +410,26 @@ void server(	hls::stream<ap_uint<16> >&		listenPort,
 				hls::stream<appNotification>&	notifications,
 				hls::stream<appReadRequest>&	readRequest,
 				hls::stream<ap_uint<16> >&		rxMetaData,
-				hls::stream<net_axis<WIDTH> >&	rxDataBuffer)
+				hls::stream<net_axis<WIDTH> >&	rxDataBuffer,
+				ap_uint<1>		runExperiment)
 {
 #pragma HLS PIPELINE II=1
 #pragma HLS INLINE off
 
-   enum listenFsmStateType {OPEN_PORT, WAIT_PORT_STATUS};
-   static listenFsmStateType listenState = OPEN_PORT;
+   enum listenFsmStateType {WAIT_RUN, OPEN_PORT, WAIT_PORT_STATUS};
+   static listenFsmStateType listenState = WAIT_RUN;
 	enum consumeFsmStateType {WAIT_PKG, CONSUME};
 	static consumeFsmStateType  serverFsmState = WAIT_PKG;
 	#pragma HLS RESET variable=listenState
 
 	switch (listenState)
 	{
+	case WAIT_RUN:
+		if (runExperiment == 1)
+		{
+			listenState = OPEN_PORT;
+		}
+		break;
 	case OPEN_PORT:
 		// Open Port 5001
 		listenPort.write(5001);
@@ -658,7 +665,8 @@ void iperf_client(	hls::stream<ap_uint<16> >& listenPort,
 			notifications,
 			readRequest,
 			rxMetaData,
-			rxDataBuffer);
+			rxDataBuffer,
+			runExperiment);
 
 	/*
 	 * Clock

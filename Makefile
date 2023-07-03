@@ -93,7 +93,7 @@ endif
 
 # Kernel compiler global settings
 CLFLAGS += -t $(TARGET) --platform $(DEVICE) --save-temps #--config $(CONFIGLINKTCL)
-CLFLAGS += --kernel_frequency 200
+#CLFLAGS += --kernel_frequency 200
 ifneq ($(TARGET), hw)
   CLFLAGS += -g
 endif
@@ -111,6 +111,7 @@ CLFLAGS += --dk chipscope:network_krnl_1:m_axis_tcp_rx_data --dk chipscope:netwo
 
 CLFLAGS += --config ./kernel/user_krnl/${USER_KRNL}/config_sp_${USER_KRNL}.txt --config ./scripts/network_krnl_mem.txt --config ./scripts/cmac_krnl_slr.txt
 
+LDCLFLAGS += --clock.freqHz 250000000:cmac_krnl_1,network_krnl_1,$(USER_KRNL)_1
 # LDCLFLAGS += --kernel_frequency "0:250|1:250"
 # LDCLFLAGS += --profile_kernel stall:${USER_KRNL}:all:all
 
